@@ -1,0 +1,454 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Family Finance Tracker</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script>
+        tailwind.config = { darkMode: 'class' }
+    </script>
+    <style>
+        body { font-family: sans-serif; }
+        .tab-content { display: none; }
+        .tab-content.active { display: block; }
+    </style>
+</head>
+<body class="bg-gray-100 dark:bg-gray-900 min-h-screen p-4 transition-colors">
+
+    <div class="max-w-md mx-auto bg-white dark:bg-gray-800 rounded-2xl shadow-lg p-6 relative">
+        <!-- Loading Spinner Overlay -->
+        <div id="loading-overlay" class="absolute inset-0 bg-white/80 dark:bg-gray-800/80 rounded-2xl flex flex-col justify-center items-center z-50 hidden">
+            <div class="animate-spin rounded-full h-10 w-10 border-t-2 border-b-2 border-blue-600 mb-2"></div>
+            <p class="text-sm text-gray-600 dark:text-gray-300 font-medium">Memproses data...</p>
+        </div>
+
+        <div class="flex justify-between items-center mb-6">
+            <h1 class="text-xl font-bold text-gray-800 dark:text-white">Keuangan Keluarga</h1>
+            <button onclick="toggleTheme()" class="p-2 bg-gray-200 dark:bg-gray-700 rounded-lg text-lg">🌙</button>
+        </div>
+
+        <div class="flex space-x-2 mb-6 bg-gray-100 dark:bg-gray-700 p-1 rounded-lg">
+            <button onclick="switchTab('transaksi')" id="btn-transaksi" class="flex-1 py-2 text-sm font-semibold rounded-md bg-white dark:bg-gray-600 text-blue-600 dark:text-white shadow-sm">Transaksi</button>
+            <button onclick="switchTab('dashboard')" id="btn-dashboard" class="flex-1 py-2 text-sm font-semibold rounded-md text-gray-600 dark:text-gray-300">Dashboard</button>
+        </div>
+
+        <!-- TAB TRANSAKSI -->
+        <div id="tab-transaksi" class="tab-content active">
+            <div class="bg-blue-600 dark:bg-blue-800 p-4 rounded-xl text-white text-center mb-6 shadow-md">
+                <p class="text-xs opacity-80 uppercase tracking-wider font-semibold">Saldo Total</p>
+                <h2 id="total-balance" class="text-3xl font-bold mt-1">Rp 0</h2>
+            </div>
+
+            <form id="finance-form" class="space-y-4 mb-6">
+                <div>
+                    <label class="block text-xs text-gray-500 dark:text-gray-400 mb-1">Keterangan</label>
+                    <input type="text" id="desc" placeholder="Contoh: Belanja Bulanan" required class="w-full p-2.5 border rounded-lg bg-gray-50 dark:bg-gray-700 dark:border-gray-600 dark:text-white outline-none focus:ring-2 focus:ring-blue-500">
+                </div>
+                <div>
+                    <label class="block text-xs text-gray-500 dark:text-gray-400 mb-1">Jumlah (Rp)</label>
+                    <input type="number" id="amount" placeholder="Nominal Rp" required class="w-full p-2.5 border rounded-lg bg-gray-50 dark:bg-gray-700 dark:border-gray-600 dark:text-white outline-none focus:ring-2 focus:ring-blue-500">
+                </div>
+                <div class="grid grid-cols-2 gap-3">
+                    <div>
+                        <label class="block text-xs text-gray-500 dark:text-gray-400 mb-1">Jenis</label>
+                        <select id="type" onchange="toggleCategoryField()" class="w-full p-2.5 border rounded-lg bg-gray-50 dark:bg-gray-700 dark:border-gray-600 dark:text-white outline-none focus:ring-2 focus:ring-blue-500">
+                            <option value="income">Pemasukan</option>
+                            <option value="expense" selected>Pengeluaran</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-xs text-gray-500 dark:text-gray-400 mb-1">Pencatat</label>
+                        <select id="user" class="w-full p-2.5 border rounded-lg bg-gray-50 dark:bg-gray-700 dark:border-gray-600 dark:text-white outline-none focus:ring-2 focus:ring-blue-500">
+                            <option value="Suami">Suami</option>
+                            <option value="Istri">Istri</option>
+                        </select>
+                    </div>
+                </div>
+                <div id="category-container">
+                    <label class="block text-xs text-gray-500 dark:text-gray-400 mb-1">Kategori</label>
+                    <select id="category" class="w-full p-2.5 border rounded-lg bg-gray-50 dark:bg-gray-700 dark:border-gray-600 dark:text-white outline-none focus:ring-2 focus:ring-blue-500">
+                        <option value="Makanan">Makanan</option>
+                        <option value="Transportasi">Transportasi</option>
+                        <option value="Pribadi">Pribadi</option>
+                        <option value="Tagihan">Tagihan</option>
+                        <option value="Lainnya">Lainnya</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="block text-xs text-gray-500 dark:text-gray-400 mb-1">Tanggal</label>
+                    <input type="date" id="date" required class="w-full p-2.5 border rounded-lg bg-gray-50 dark:bg-gray-700 dark:border-gray-600 dark:text-white outline-none focus:ring-2 focus:ring-blue-500">
+                </div>
+                <button type="submit" id="submit-btn" class="w-full bg-blue-600 hover:bg-blue-700 text-white p-3 rounded-lg font-bold transition shadow-sm">Simpan Transaksi</button>
+            </form>
+
+            <hr class="border-gray-200 dark:border-gray-700 my-6">
+
+            <div class="flex items-center justify-between mb-4">
+                <h3 class="text-gray-800 dark:text-white font-bold">Riwayat Transaksi</h3>
+                <select id="filter-month" onchange="updateUI()" class="text-xs border dark:border-gray-600 bg-white dark:bg-gray-700 dark:text-white rounded-lg p-1.5 outline-none focus:ring-2 focus:ring-blue-500">
+                    <option value="all">Semua Bulan</option>
+                </select>
+            </div>
+            <div id="history-list" class="space-y-2"></div>
+        </div>
+
+        <!-- TAB DASHBOARD -->
+        <div id="tab-dashboard" class="tab-content">
+            <div class="flex items-center justify-between mb-6">
+                <h3 class="text-gray-800 dark:text-white font-bold text-lg">Analisis Keuangan</h3>
+                <select id="dashboard-filter-month" onchange="updateCharts()" class="text-xs border dark:border-gray-600 bg-white dark:bg-gray-700 dark:text-white rounded-lg p-1.5 outline-none focus:ring-2 focus:ring-blue-500">
+                    <option value="all">Semua Bulan</option>
+                </select>
+            </div>
+
+            <div class="space-y-8">
+                <!-- Chart Pengeluaran Kategori -->
+                <div class="bg-gray-50 dark:bg-gray-700/50 p-4 rounded-xl border border-gray-100 dark:border-gray-700">
+                    <h4 class="text-sm font-semibold text-gray-600 dark:text-gray-300 mb-4 text-center">Pengeluaran Kategori (Suami vs Istri)</h4>
+                    <div class="relative w-full h-64">
+                        <canvas id="chart-categories"></canvas>
+                    </div>
+                </div>
+
+                <!-- Chart Pemasukan vs Pengeluaran Bulanan -->
+                <div class="bg-gray-50 dark:bg-gray-700/50 p-4 rounded-xl border border-gray-100 dark:border-gray-700">
+                    <h4 class="text-sm font-semibold text-gray-600 dark:text-gray-300 mb-4 text-center">Pemasukan vs Pengeluaran per Bulan</h4>
+                    <div class="relative w-full h-64">
+                        <canvas id="chart-monthly"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Masukkan URL Google Apps Script Web App Anda di bawah ini
+        const WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbyP5AI06D3pv2ozhg9ZqUJ93jzMhtlKBn4sTB-3wWCHAr1sl6hde3bCR-y5vdkhkI7bqQ/exec'; 
+        let transactions = [];
+        let catChart, monChart;
+
+        // Atur Tema Utama
+        if (localStorage.getItem('theme') === 'light') {
+            document.documentElement.classList.remove('dark');
+        } else {
+            document.documentElement.classList.add('dark');
+        }
+
+        // Toggle Kategori Sesuai Tipe
+        function toggleCategoryField() {
+            const type = document.getElementById('type').value;
+            const container = document.getElementById('category-container');
+            if (type === 'income') {
+                container.classList.add('hidden');
+            } else {
+                container.classList.remove('hidden');
+            }
+        }
+
+        // Tampilkan/Sembunyikan Loading Spinner
+        function showLoading(show) {
+            const overlay = document.getElementById('loading-overlay');
+            if (show) {
+                overlay.classList.remove('hidden');
+            } else {
+                overlay.classList.add('hidden');
+            }
+        }
+
+        // Mengubah Format YYYY-MM ke Bulan Indonesia
+        function formatYearMonth(yearMonthStr) {
+            if (!yearMonthStr || yearMonthStr.length < 7) return yearMonthStr;
+            const [year, month] = yearMonthStr.split('-');
+            const monthsIndo = [
+                "Januari", "Februari", "Maret", "April", "Mei", "Juni",
+                "Juli", "Agustus", "September", "Oktober", "November", "Desember"
+            ];
+            const mIndex = parseInt(month, 10) - 1;
+            return (mIndex >= 0 && mIndex < 12) ? `${monthsIndo[mIndex]} ${year}` : yearMonthStr;
+        }
+
+        // Ambil data transaksi dari Google Sheets
+        async function fetchData() {
+            showLoading(true);
+            try {
+                const res = await fetch(WEB_APP_URL);
+                const rawData = await res.json();
+                
+                // Normalisasi Key data (Bahasa Indonesia & Inggris)
+                transactions = rawData.map(t => ({
+                    id: t.id || t.ID || Date.now(),
+                    desc: t.desc || t.Keterangan || t.keterangan || '',
+                    amount: parseFloat(t.amount || t.Jumlah || t.jumlah || 0),
+                    type: (t.type || t.Tipe || t.tipe || '').toLowerCase(),
+                    category: t.category || t.Kategori || t.kategori || 'Lainnya',
+                    user: t.user || t.User || 'Suami',
+                    date: t.date || t.Tanggal || t.tanggal || ''
+                })).filter(t => t.date && !isNaN(t.amount));
+
+                updateFilters();
+                updateUI();
+                updateCharts();
+            } catch (e) { 
+                console.error("Error load data:", e); 
+            } finally {
+                showLoading(false);
+            }
+        }
+
+        // Perbarui Filter Dropdown Secara Dinamis
+        function updateFilters() {
+            const filterMonthSelect = document.getElementById('filter-month');
+            const dashboardFilterSelect = document.getElementById('dashboard-filter-month');
+            
+            const currentFilter = filterMonthSelect.value;
+            const currentDbFilter = dashboardFilterSelect.value;
+
+            // Kumpulkan daftar bulan yang unik (YYYY-MM)
+            const uniqueMonths = [...new Set(transactions.map(t => t.date.substring(0, 7)).filter(m => m))].sort().reverse();
+            
+            let optionsHTML = '<option value="all">Semua Bulan</option>';
+            uniqueMonths.forEach(m => {
+                optionsHTML += `<option value="${m}">${formatYearMonth(m)}</option>`;
+            });
+
+            filterMonthSelect.innerHTML = optionsHTML;
+            dashboardFilterSelect.innerHTML = optionsHTML;
+
+            // Pertahankan filter yang dipilih jika masih tersedia
+            if (uniqueMonths.includes(currentFilter)) filterMonthSelect.value = currentFilter;
+            if (uniqueMonths.includes(currentDbFilter)) dashboardFilterSelect.value = currentDbFilter;
+        }
+
+        // Switch Tab View
+        function switchTab(tab) {
+            document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
+            document.getElementById(`tab-${tab}`).classList.add('active');
+
+            const btnTx = document.getElementById('btn-transaksi');
+            const btnDb = document.getElementById('btn-dashboard');
+
+            if (tab === 'transaksi') {
+                btnTx.className = "flex-1 py-2 text-sm font-semibold rounded-md bg-white dark:bg-gray-600 text-blue-600 dark:text-white shadow-sm";
+                btnDb.className = "flex-1 py-2 text-sm font-semibold rounded-md text-gray-600 dark:text-gray-300";
+            } else {
+                btnTx.className = "flex-1 py-2 text-sm font-semibold rounded-md text-gray-600 dark:text-gray-300";
+                btnDb.className = "flex-1 py-2 text-sm font-semibold rounded-md bg-white dark:bg-gray-600 text-blue-600 dark:text-white shadow-sm";
+                // Render ulang chart agar menyesuaikan lebar canvas baru
+                updateCharts();
+            }
+        }
+
+        // Toggle Dark/Light Theme
+        function toggleTheme() { 
+            const isDark = document.documentElement.classList.toggle('dark'); 
+            localStorage.setItem('theme', isDark ? 'dark' : 'light');
+            updateCharts();
+        }
+
+        // Simpan Data Baru
+        document.getElementById('finance-form').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            showLoading(true);
+
+            const typeValue = document.getElementById('type').value;
+            const data = {
+                id: Date.now(),
+                desc: document.getElementById('desc').value,
+                amount: parseFloat(document.getElementById('amount').value),
+                type: typeValue,
+                category: typeValue === 'expense' ? document.getElementById('category').value : '',
+                user: document.getElementById('user').value,
+                date: document.getElementById('date').value
+            };
+
+            try {
+                await fetch(WEB_APP_URL, { 
+                    method: 'POST', 
+                    body: JSON.stringify(data) 
+                });
+                document.getElementById('desc').value = '';
+                document.getElementById('amount').value = '';
+                document.getElementById('date').valueAsDate = new Date();
+                await fetchData();
+            } catch (e) {
+                console.error("Gagal menyimpan data:", e);
+                showLoading(false);
+            }
+        });
+
+        // Update Tampilan Transaksi & Saldo
+        function updateUI() {
+            const list = document.getElementById('history-list');
+            const selectedMonth = document.getElementById('filter-month').value;
+            
+            // Hitung total saldo
+            let totalIncome = 0;
+            let totalExpense = 0;
+
+            transactions.forEach(t => {
+                if (t.type === 'income') {
+                    totalIncome += t.amount;
+                } else if (t.type === 'expense') {
+                    totalExpense += t.amount;
+                }
+            });
+
+            const balance = totalIncome - totalExpense;
+            const balanceEl = document.getElementById('total-balance');
+            balanceEl.innerText = `Rp ${balance.toLocaleString('id-ID')}`;
+
+            // Saring list transaksi berdasarkan filter
+            const filtered = selectedMonth === 'all' 
+                ? transactions 
+                : transactions.filter(t => t.date.startsWith(selectedMonth));
+
+            // Urutkan berdasarkan tanggal terbaru
+            filtered.sort((a, b) => new Date(b.date) - new Date(a.date));
+
+            list.innerHTML = '';
+            if (filtered.length === 0) {
+                list.innerHTML = `<p class="text-center text-sm text-gray-500 py-4">Belum ada transaksi.</p>`;
+                return;
+            }
+
+            filtered.forEach(t => {
+                const isIncome = t.type === 'income';
+                list.innerHTML += `
+                    <div class="p-3 bg-gray-50 dark:bg-gray-700/60 border-l-4 ${isIncome ? 'border-green-500' : 'border-red-500'} rounded-lg flex justify-between items-center transition-all">
+                        <div>
+                            <p class="font-semibold text-sm text-gray-800 dark:text-gray-100">${t.desc}</p>
+                            <p class="text-xs text-gray-400 dark:text-gray-400">${t.date} • ${t.user} ${t.category ? '• ' + t.category : ''}</p>
+                        </div>
+                        <span class="font-bold text-sm ${isIncome ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'}">
+                            ${isIncome ? '+' : '-'} Rp ${t.amount.toLocaleString('id-ID')}
+                        </span>
+                    </div>
+                `;
+            });
+        }
+
+        // Render Grafik Visual
+        function updateCharts() {
+            const isDark = document.documentElement.classList.contains('dark');
+            const textColor = isDark ? '#f3f4f6' : '#1f2937';
+            const gridColor = isDark ? '#374151' : '#e5e7eb';
+
+            if (catChart) catChart.destroy();
+            if (monChart) monChart.destroy();
+
+            const dashboardMonth = document.getElementById('dashboard-filter-month').value;
+            
+            // 1. FILTER TRANSAKSI UNTUK KATEGORI
+            const filteredForCat = dashboardMonth === 'all' 
+                ? transactions.filter(t => t.type === 'expense')
+                : transactions.filter(t => t.type === 'expense' && t.date.startsWith(dashboardMonth));
+
+            const categories = ["Makanan", "Transportasi", "Pribadi", "Tagihan", "Lainnya"];
+            const suamiExpenses = categories.map(cat => {
+                return filteredForCat
+                    .filter(t => t.category === cat && t.user === 'Suami')
+                    .reduce((sum, t) => sum + t.amount, 0);
+            });
+            const istriExpenses = categories.map(cat => {
+                return filteredForCat
+                    .filter(t => t.category === cat && t.user === 'Istri')
+                    .reduce((sum, t) => sum + t.amount, 0);
+            });
+
+            // Grapic Kategori (Suami vs Istri)
+            const ctxCat = document.getElementById('chart-categories').getContext('2d');
+            catChart = new Chart(ctxCat, {
+                type: 'bar',
+                data: {
+                    labels: categories,
+                    datasets: [
+                        {
+                            label: 'Suami',
+                            data: suamiExpenses,
+                            backgroundColor: '#3b82f6', // Biru
+                            borderRadius: 4
+                        },
+                        {
+                            label: 'Istri',
+                            data: istriExpenses,
+                            backgroundColor: '#ec4899', // Merah Muda
+                            borderRadius: 4
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { labels: { color: textColor } }
+                    },
+                    scales: {
+                        x: { ticks: { color: textColor }, grid: { color: gridColor } },
+                        y: { beginAtZero: true, ticks: { color: textColor }, grid: { color: gridColor } }
+                    }
+                }
+            });
+
+            // 2. PEMASUKAN VS PENGELUARAN BULANAN
+            const monthlyData = {};
+            transactions.forEach(t => {
+                const month = t.date.substring(0, 7);
+                if (!month) return;
+                if (!monthlyData[month]) {
+                    monthlyData[month] = { income: 0, expense: 0 };
+                }
+                if (t.type === 'income') {
+                    monthlyData[month].income += t.amount;
+                } else if (t.type === 'expense') {
+                    monthlyData[month].expense += t.amount;
+                }
+            });
+
+            const sortedMonths = Object.keys(monthlyData).sort();
+            const monthlyLabels = sortedMonths.map(m => formatYearMonth(m));
+            const incomes = sortedMonths.map(m => monthlyData[m].income);
+            const expenses = sortedMonths.map(m => monthlyData[m].expense);
+
+            const ctxMon = document.getElementById('chart-monthly').getContext('2d');
+            monChart = new Chart(ctxMon, {
+                type: 'bar',
+                data: {
+                    labels: monthlyLabels,
+                    datasets: [
+                        {
+                            label: 'Pemasukan',
+                            data: incomes,
+                            backgroundColor: '#10b981', // Hijau
+                            borderRadius: 4
+                        },
+                        {
+                            label: 'Pengeluaran',
+                            data: expenses,
+                            backgroundColor: '#ef4444', // Merah
+                            borderRadius: 4
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { labels: { color: textColor } }
+                    },
+                    scales: {
+                        x: { ticks: { color: textColor }, grid: { color: gridColor } },
+                        y: { beginAtZero: true, ticks: { color: textColor }, grid: { color: gridColor } }
+                    }
+                }
+            });
+        }
+
+        // Inisialisasi awal
+        toggleCategoryField();
+        document.getElementById('date').valueAsDate = new Date();
+        fetchData();
+    </script>
+</body>
+</html>
