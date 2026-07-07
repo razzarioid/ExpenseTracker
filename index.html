@@ -24,392 +24,458 @@
             <p class="text-sm text-gray-600 dark:text-gray-300 font-medium">Memproses data...</p>
         </div>
 
+        <!-- Header -->
         <div class="flex justify-between items-center mb-6">
-            <h1 class="text-xl font-bold text-gray-800 dark:text-white">Keuangan Keluarga</h1>
-            <button onclick="toggleTheme()" class="p-2 bg-gray-200 dark:bg-gray-700 rounded-lg text-lg">🌙</button>
+            <h1 class="text-2xl font-bold text-gray-800 dark:text-white">Finance Tracker</h1>
+            <button id="theme-toggle" class="p-2 rounded-lg bg-gray-200 dark:bg-gray-700 text-gray-800 dark:text-gray-200 hover:opacity-90">
+                🌙
+            </button>
         </div>
 
-        <div class="flex space-x-2 mb-6 bg-gray-100 dark:bg-gray-700 p-1 rounded-lg">
-            <button onclick="switchTab('transaksi')" id="btn-transaksi" class="flex-1 py-2 text-sm font-semibold rounded-md bg-white dark:bg-gray-600 text-blue-600 dark:text-white shadow-sm">Transaksi</button>
-            <button onclick="switchTab('dashboard')" id="btn-dashboard" class="flex-1 py-2 text-sm font-semibold rounded-md text-gray-600 dark:text-gray-300">Dashboard</button>
+        <!-- Navigation Tabs -->
+        <div class="flex border-b border-gray-200 dark:border-gray-700 mb-6">
+            <button class="tab-btn flex-1 py-2 text-center font-medium border-b-2 border-blue-600 text-blue-600 active" onclick="switchTab('input-tab', this)">
+                Transaksi
+            </button>
+            <button class="tab-btn flex-1 py-2 text-center font-medium border-b-2 border-transparent text-gray-500 dark:text-gray-400" onclick="switchTab('history-tab', this)">
+                Riwayat
+            </button>
+            <button class="tab-btn flex-1 py-2 text-center font-medium border-b-2 border-transparent text-gray-500 dark:text-gray-400" onclick="switchTab('chart-tab', this)">
+                Analisis
+            </button>
         </div>
 
-        <!-- TAB TRANSAKSI -->
-        <div id="tab-transaksi" class="tab-content active">
-            <div class="bg-blue-600 dark:bg-blue-800 p-4 rounded-xl text-white text-center mb-6 shadow-md">
-                <p class="text-xs opacity-80 uppercase tracking-wider font-semibold">Saldo Total</p>
-                <h2 id="total-balance" class="text-3xl font-bold mt-1">Rp 0</h2>
-            </div>
+        <!-- TAB 1: INPUT TRANSAKSI -->
+        <div id="input-tab" class="tab-content active space-y-4">
+            <form id="transaction-form" onsubmit="handleFormSubmit(event)" class="space-y-4">
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Tipe Transaksi</label>
+                    <div class="grid grid-cols-2 gap-2">
+                        <button type="button" id="btn-expense" class="py-2.5 rounded-xl border-2 border-red-500 bg-red-50 dark:bg-red-950/30 text-red-700 dark:text-red-400 font-semibold" onclick="setTxType('expense')">
+                            Pengeluaran
+                        </button>
+                        <button type="button" id="btn-income" class="py-2.5 rounded-xl border-2 border-gray-200 dark:border-gray-700 text-gray-500 dark:text-gray-400 font-semibold" onclick="setTxType('income')">
+                            Pemasukan
+                        </button>
+                    </div>
+                </div>
 
-            <form id="finance-form" class="space-y-4 mb-6">
                 <div>
-                    <label class="block text-xs text-gray-500 dark:text-gray-400 mb-1">Keterangan</label>
-                    <input type="text" id="desc" placeholder="Contoh: Belanja Bulanan" required class="w-full p-2.5 border rounded-lg bg-gray-50 dark:bg-gray-700 dark:border-gray-600 dark:text-white outline-none focus:ring-2 focus:ring-blue-500">
+                    <label for="amount" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Jumlah (Rp)</label>
+                    <input type="number" id="amount" required placeholder="Contoh: 50000" class="w-full p-3 rounded-xl border border-gray-300 dark:border-gray-700 bg-gray-50 dark:bg-gray-900 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:outline-none">
                 </div>
+
                 <div>
-                    <label class="block text-xs text-gray-500 dark:text-gray-400 mb-1">Jumlah (Rp)</label>
-                    <input type="number" id="amount" placeholder="Nominal Rp" required class="w-full p-2.5 border rounded-lg bg-gray-50 dark:bg-gray-700 dark:border-gray-600 dark:text-white outline-none focus:ring-2 focus:ring-blue-500">
+                    <label for="description" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Keterangan</label>
+                    <input type="text" id="description" required placeholder="Contoh: Belanja Bulanan" class="w-full p-3 rounded-xl border border-gray-300 dark:border-gray-700 bg-gray-50 dark:bg-gray-900 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:outline-none">
                 </div>
-                <div class="grid grid-cols-2 gap-3">
-                    <div>
-                        <label class="block text-xs text-gray-500 dark:text-gray-400 mb-1">Jenis</label>
-                        <select id="type" onchange="toggleCategoryField()" class="w-full p-2.5 border rounded-lg bg-gray-50 dark:bg-gray-700 dark:border-gray-600 dark:text-white outline-none focus:ring-2 focus:ring-blue-500">
-                            <option value="income">Pemasukan</option>
-                            <option value="expense" selected>Pengeluaran</option>
-                        </select>
-                    </div>
-                    <div>
-                        <label class="block text-xs text-gray-500 dark:text-gray-400 mb-1">Pencatat</label>
-                        <select id="user" class="w-full p-2.5 border rounded-lg bg-gray-50 dark:bg-gray-700 dark:border-gray-600 dark:text-white outline-none focus:ring-2 focus:ring-blue-500">
-                            <option value="Suami">Suami</option>
-                            <option value="Istri">Istri</option>
-                        </select>
-                    </div>
-                </div>
+
                 <div id="category-container">
-                    <label class="block text-xs text-gray-500 dark:text-gray-400 mb-1">Kategori</label>
-                    <select id="category" class="w-full p-2.5 border rounded-lg bg-gray-50 dark:bg-gray-700 dark:border-gray-600 dark:text-white outline-none focus:ring-2 focus:ring-blue-500">
+                    <label for="category" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Kategori</label>
+                    <select id="category" class="w-full p-3 rounded-xl border border-gray-300 dark:border-gray-700 bg-gray-50 dark:bg-gray-900 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:outline-none">
                         <option value="Makanan">Makanan</option>
                         <option value="Transportasi">Transportasi</option>
-                        <option value="Pribadi">Pribadi</option>
                         <option value="Tagihan">Tagihan</option>
+                        <option value="Hiburan">Hiburan</option>
+                        <option value="Kesehatan">Kesehatan</option>
                         <option value="Lainnya">Lainnya</option>
                     </select>
                 </div>
+
                 <div>
-                    <label class="block text-xs text-gray-500 dark:text-gray-400 mb-1">Tanggal</label>
-                    <input type="date" id="date" required class="w-full p-2.5 border rounded-lg bg-gray-50 dark:bg-gray-700 dark:border-gray-600 dark:text-white outline-none focus:ring-2 focus:ring-blue-500">
+                    <label for="user" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">User / Pembuat</label>
+                    <select id="user" class="w-full p-3 rounded-xl border border-gray-300 dark:border-gray-700 bg-gray-50 dark:bg-gray-900 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:outline-none">
+                        <option value="Suami">Suami</option>
+                        <option value="Istri">Istri</option>
+                    </select>
                 </div>
-                <button type="submit" id="submit-btn" class="w-full bg-blue-600 hover:bg-blue-700 text-white p-3 rounded-lg font-bold transition shadow-sm">Simpan Transaksi</button>
+
+                <div>
+                    <label for="date" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Tanggal Transaksi</label>
+                    <input type="date" id="date" required class="w-full p-3 rounded-xl border border-gray-300 dark:border-gray-700 bg-gray-50 dark:bg-gray-900 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:outline-none">
+                </div>
+
+                <button type="submit" class="w-full py-3.5 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-xl shadow-md transition-all">
+                    Simpan Transaksi
+                </button>
             </form>
-
-            <hr class="border-gray-200 dark:border-gray-700 my-6">
-
-            <div class="flex items-center justify-between mb-4">
-                <h3 class="text-gray-800 dark:text-white font-bold">Riwayat Transaksi</h3>
-                <select id="filter-month" onchange="updateUI()" class="text-xs border dark:border-gray-600 bg-white dark:bg-gray-700 dark:text-white rounded-lg p-1.5 outline-none focus:ring-2 focus:ring-blue-500">
-                    <option value="all">Semua Bulan</option>
-                </select>
-            </div>
-            <div id="history-list" class="space-y-2"></div>
         </div>
 
-        <!-- TAB DASHBOARD -->
-        <div id="tab-dashboard" class="tab-content">
-            <div class="flex items-center justify-between mb-6">
-                <h3 class="text-gray-800 dark:text-white font-bold text-lg">Analisis Keuangan</h3>
-                <select id="dashboard-filter-month" onchange="updateCharts()" class="text-xs border dark:border-gray-600 bg-white dark:bg-gray-700 dark:text-white rounded-lg p-1.5 outline-none focus:ring-2 focus:ring-blue-500">
-                    <option value="all">Semua Bulan</option>
+        <!-- TAB 2: RIWAYAT TRANSAKSI -->
+        <div id="history-tab" class="tab-content space-y-4">
+            <!-- Filter Sederhana -->
+            <div class="flex gap-2">
+                <select id="filter-user" onchange="applyFilters()" class="flex-1 p-2 text-xs rounded-lg border border-gray-300 dark:border-gray-700 bg-gray-50 dark:bg-gray-900 text-gray-900 dark:text-white">
+                    <option value="Semua">Semua User</option>
+                    <option value="Suami">Suami</option>
+                    <option value="Istri">Istri</option>
+                </select>
+                <select id="filter-type" onchange="applyFilters()" class="flex-1 p-2 text-xs rounded-lg border border-gray-300 dark:border-gray-700 bg-gray-50 dark:bg-gray-900 text-gray-900 dark:text-white">
+                    <option value="Semua">Semua Tipe</option>
+                    <option value="expense">Pengeluaran</option>
+                    <option value="income">Pemasukan</option>
                 </select>
             </div>
 
-            <div class="space-y-8">
-                <!-- Chart Pengeluaran Kategori -->
-                <div class="bg-gray-50 dark:bg-gray-700/50 p-4 rounded-xl border border-gray-100 dark:border-gray-700">
-                    <h4 class="text-sm font-semibold text-gray-600 dark:text-gray-300 mb-4 text-center">Pengeluaran Kategori (Suami vs Istri)</h4>
-                    <div class="relative w-full h-64">
-                        <canvas id="chart-categories"></canvas>
-                    </div>
-                </div>
+            <!-- List Riwayat -->
+            <div id="transaction-list" class="space-y-2 max-h-[450px] overflow-y-auto pr-1">
+                <p class="text-center text-sm text-gray-500 py-4">Memuat riwayat transaksi...</p>
+            </div>
+        </div>
 
-                <!-- Chart Pemasukan vs Pengeluaran Bulanan -->
-                <div class="bg-gray-50 dark:bg-gray-700/50 p-4 rounded-xl border border-gray-100 dark:border-gray-700">
-                    <h4 class="text-sm font-semibold text-gray-600 dark:text-gray-300 mb-4 text-center">Pemasukan vs Pengeluaran per Bulan</h4>
-                    <div class="relative w-full h-64">
-                        <canvas id="chart-monthly"></canvas>
-                    </div>
+        <!-- TAB 3: ANALISIS / CHART -->
+        <div id="chart-tab" class="tab-content space-y-6">
+            <div class="bg-gray-50 dark:bg-gray-900 p-4 rounded-xl">
+                <h3 class="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-3 text-center">Perbandingan Bulanan</h3>
+                <div class="h-64">
+                    <canvas id="chart-monthly"></canvas>
+                </div>
+            </div>
+            
+            <div class="grid grid-cols-2 gap-4 text-center">
+                <div class="bg-emerald-50 dark:bg-emerald-950/20 p-3 rounded-xl border border-emerald-100 dark:border-emerald-900/30">
+                    <span class="text-xs text-emerald-600 dark:text-emerald-400 block mb-1 font-medium">Total Pemasukan</span>
+                    <span id="summary-income" class="text-base font-bold text-emerald-700 dark:text-emerald-300">Rp 0</span>
+                </div>
+                <div class="bg-red-50 dark:bg-red-950/20 p-3 rounded-xl border border-red-100 dark:border-red-900/30">
+                    <span class="text-xs text-red-600 dark:text-red-400 block mb-1 font-medium">Total Pengeluaran</span>
+                    <span id="summary-expense" class="text-base font-bold text-red-700 dark:text-red-300">Rp 0</span>
                 </div>
             </div>
         </div>
     </div>
 
     <script>
-        // Masukkan URL Google Apps Script Web App Anda di bawah ini
-        const WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbyP5AI06D3pv2ozhg9ZqUJ93jzMhtlKBn4sTB-3wWCHAr1sl6hde3bCR-y5vdkhkI7bqQ/exec'; 
-        let transactions = [];
-        let catChart, monChart;
+        // --- KONFIGURASI WEB APP URL GOOGLE SCRIPT ---
+        // Masukkan URL Web App Script Anda di sini agar sinkron ke Google Sheet Anda!
+        const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbyP5AI06D3pv2ozhg9ZqUJ93jzMhtlKBn4sTB-3wWCHAr1sl6hde3bCR-y5vdkhkI7bqQ/exec"; 
 
-        // Atur Tema Utama
-        if (localStorage.getItem('theme') === 'light') {
-            document.documentElement.classList.remove('dark');
-        } else {
-            document.documentElement.classList.add('dark');
-        }
+        let allTransactions = [];
+        let currentTxType = 'expense';
+        let monChart = null;
 
-        // Toggle Kategori Sesuai Tipe
-        function toggleCategoryField() {
-            const type = document.getElementById('type').value;
-            const container = document.getElementById('category-container');
-            if (type === 'income') {
-                container.classList.add('hidden');
+        // Dark Mode Toggle
+        const themeToggle = document.getElementById('theme-toggle');
+        themeToggle.addEventListener('click', () => {
+            document.documentElement.classList.toggle('dark');
+            if (document.documentElement.classList.contains('dark')) {
+                themeToggle.innerHTML = '☀️';
             } else {
-                container.classList.remove('hidden');
+                themeToggle.innerHTML = '🌙';
             }
-        }
-
-        // Tampilkan/Sembunyikan Loading Spinner
-        function showLoading(show) {
-            const overlay = document.getElementById('loading-overlay');
-            if (show) {
-                overlay.classList.remove('hidden');
-            } else {
-                overlay.classList.add('hidden');
-            }
-        }
-
-        // Mengubah Format YYYY-MM ke Bulan Indonesia
-        function formatYearMonth(yearMonthStr) {
-            if (!yearMonthStr || yearMonthStr.length < 7) return yearMonthStr;
-            const [year, month] = yearMonthStr.split('-');
-            const monthsIndo = [
-                "Januari", "Februari", "Maret", "April", "Mei", "Juni",
-                "Juli", "Agustus", "September", "Oktober", "November", "Desember"
-            ];
-            const mIndex = parseInt(month, 10) - 1;
-            return (mIndex >= 0 && mIndex < 12) ? `${monthsIndo[mIndex]} ${year}` : yearMonthStr;
-        }
-
-        // Ambil data transaksi dari Google Sheets
-        async function fetchData() {
-            showLoading(true);
-            try {
-                const res = await fetch(WEB_APP_URL);
-                const rawData = await res.json();
-                
-                // Normalisasi Key data (Bahasa Indonesia & Inggris)
-                transactions = rawData.map(t => ({
-                    id: t.id || t.ID || Date.now(),
-                    desc: t.desc || t.Keterangan || t.keterangan || '',
-                    amount: parseFloat(t.amount || t.Jumlah || t.jumlah || 0),
-                    type: (t.type || t.Tipe || t.tipe || '').toLowerCase(),
-                    category: t.category || t.Kategori || t.kategori || 'Lainnya',
-                    user: t.user || t.User || 'Suami',
-                    date: t.date || t.Tanggal || t.tanggal || ''
-                })).filter(t => t.date && !isNaN(t.amount));
-
-                updateFilters();
-                updateUI();
-                updateCharts();
-            } catch (e) { 
-                console.error("Error load data:", e); 
-            } finally {
-                showLoading(false);
-            }
-        }
-
-        // Perbarui Filter Dropdown Secara Dinamis
-        function updateFilters() {
-            const filterMonthSelect = document.getElementById('filter-month');
-            const dashboardFilterSelect = document.getElementById('dashboard-filter-month');
-            
-            const currentFilter = filterMonthSelect.value;
-            const currentDbFilter = dashboardFilterSelect.value;
-
-            // Kumpulkan daftar bulan yang unik (YYYY-MM)
-            const uniqueMonths = [...new Set(transactions.map(t => t.date.substring(0, 7)).filter(m => m))].sort().reverse();
-            
-            let optionsHTML = '<option value="all">Semua Bulan</option>';
-            uniqueMonths.forEach(m => {
-                optionsHTML += `<option value="${m}">${formatYearMonth(m)}</option>`;
-            });
-
-            filterMonthSelect.innerHTML = optionsHTML;
-            dashboardFilterSelect.innerHTML = optionsHTML;
-
-            // Pertahankan filter yang dipilih jika masih tersedia
-            if (uniqueMonths.includes(currentFilter)) filterMonthSelect.value = currentFilter;
-            if (uniqueMonths.includes(currentDbFilter)) dashboardFilterSelect.value = currentDbFilter;
-        }
-
-        // Switch Tab View
-        function switchTab(tab) {
-            document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
-            document.getElementById(`tab-${tab}`).classList.add('active');
-
-            const btnTx = document.getElementById('btn-transaksi');
-            const btnDb = document.getElementById('btn-dashboard');
-
-            if (tab === 'transaksi') {
-                btnTx.className = "flex-1 py-2 text-sm font-semibold rounded-md bg-white dark:bg-gray-600 text-blue-600 dark:text-white shadow-sm";
-                btnDb.className = "flex-1 py-2 text-sm font-semibold rounded-md text-gray-600 dark:text-gray-300";
-            } else {
-                btnTx.className = "flex-1 py-2 text-sm font-semibold rounded-md text-gray-600 dark:text-gray-300";
-                btnDb.className = "flex-1 py-2 text-sm font-semibold rounded-md bg-white dark:bg-gray-600 text-blue-600 dark:text-white shadow-sm";
-                // Render ulang chart agar menyesuaikan lebar canvas baru
-                updateCharts();
-            }
-        }
-
-        // Toggle Dark/Light Theme
-        function toggleTheme() { 
-            const isDark = document.documentElement.classList.toggle('dark'); 
-            localStorage.setItem('theme', isDark ? 'dark' : 'light');
-            updateCharts();
-        }
-
-        // Simpan Data Baru
-        document.getElementById('finance-form').addEventListener('submit', async (e) => {
-            e.preventDefault();
-            showLoading(true);
-
-            const typeValue = document.getElementById('type').value;
-            const data = {
-                id: Date.now(),
-                desc: document.getElementById('desc').value,
-                amount: parseFloat(document.getElementById('amount').value),
-                type: typeValue,
-                category: typeValue === 'expense' ? document.getElementById('category').value : '',
-                user: document.getElementById('user').value,
-                date: document.getElementById('date').value
-            };
-
-            try {
-                await fetch(WEB_APP_URL, { 
-                    method: 'POST', 
-                    body: JSON.stringify(data) 
-                });
-                document.getElementById('desc').value = '';
-                document.getElementById('amount').value = '';
-                document.getElementById('date').valueAsDate = new Date();
-                await fetchData();
-            } catch (e) {
-                console.error("Gagal menyimpan data:", e);
-                showLoading(false);
+            if (allTransactions.length > 0) {
+                renderChart(allTransactions);
             }
         });
 
-        // Update Tampilan Transaksi & Saldo
-        function updateUI() {
-            const list = document.getElementById('history-list');
-            const selectedMonth = document.getElementById('filter-month').value;
-            
-            // Hitung total saldo
-            let totalIncome = 0;
-            let totalExpense = 0;
-
-            transactions.forEach(t => {
-                if (t.type === 'income') {
-                    totalIncome += t.amount;
-                } else if (t.type === 'expense') {
-                    totalExpense += t.amount;
-                }
+        // Tab Switcher
+        function switchTab(tabId, btn) {
+            document.querySelectorAll('.tab-content').forEach(tab => tab.classList.remove('active'));
+            document.querySelectorAll('.tab-btn').forEach(b => {
+                b.classList.remove('text-blue-600', 'border-blue-600');
+                b.classList.add('text-gray-500', 'dark:text-gray-400', 'border-transparent');
             });
 
-            const balance = totalIncome - totalExpense;
-            const balanceEl = document.getElementById('total-balance');
-            balanceEl.innerText = `Rp ${balance.toLocaleString('id-ID')}`;
+            document.getElementById(tabId).classList.add('active');
+            btn.classList.add('text-blue-600', 'border-blue-600');
+            btn.classList.remove('text-gray-500', 'dark:text-gray-400', 'border-transparent');
+        }
 
-            // Saring list transaksi berdasarkan filter
-            const filtered = selectedMonth === 'all' 
-                ? transactions 
-                : transactions.filter(t => t.date.startsWith(selectedMonth));
+        // Set tipe transaksi (Pemasukan / Pengeluaran)
+        function setTxType(type) {
+            currentTxType = type;
+            const btnExpense = document.getElementById('btn-expense');
+            const btnIncome = document.getElementById('btn-income');
 
-            // Urutkan berdasarkan tanggal terbaru
-            filtered.sort((a, b) => new Date(b.date) - new Date(a.date));
+            if (type === 'expense') {
+                btnExpense.className = "py-2.5 rounded-xl border-2 border-red-500 bg-red-50 dark:bg-red-950/30 text-red-700 dark:text-red-400 font-semibold";
+                btnIncome.className = "py-2.5 rounded-xl border-2 border-gray-200 dark:border-gray-700 text-gray-500 dark:text-gray-400 font-semibold";
+            } else {
+                btnIncome.className = "py-2.5 rounded-xl border-2 border-emerald-500 bg-emerald-50 dark:bg-emerald-950/30 text-emerald-700 dark:text-emerald-400 font-semibold";
+                btnExpense.className = "py-2.5 rounded-xl border-2 border-gray-200 dark:border-gray-700 text-gray-500 dark:text-gray-400 font-semibold";
+            }
+            toggleCategoryField();
+        }
 
-            list.innerHTML = '';
-            if (filtered.length === 0) {
-                list.innerHTML = `<p class="text-center text-sm text-gray-500 py-4">Belum ada transaksi.</p>`;
+        function toggleCategoryField() {
+            const container = document.getElementById('category-container');
+            if (currentTxType === 'income') {
+                container.style.opacity = '0.4';
+                document.getElementById('category').disabled = true;
+                document.getElementById('category').value = 'Makanan'; // Default / Non-active
+            } else {
+                container.style.opacity = '1';
+                document.getElementById('category').disabled = false;
+            }
+        }
+
+        // Format Angka ke Rupiah
+        function formatRupiah(number) {
+            return new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', maximumFractionDigits: 0 }).format(number);
+        }
+
+        // Format tanggal dari YYYY-MM-DD menjadi format teks Indonesia (misal: 01 Juli 2026)
+        function formatTanggalLokal(dateString) {
+            if (!dateString) return "-";
+            
+            // Atasi masalah jika format tanggal adalah string ISO atau YYYY-MM-DD
+            // Kita potong bagian jam jika ada agar murni mendapatkan tanggalnya saja
+            const pureDateStr = dateString.split(' ')[0] || dateString;
+            const parts = pureDateStr.split('-');
+            
+            if (parts.length === 3) {
+                const year = parts[0];
+                const monthIndex = parseInt(parts[1], 10) - 1;
+                const day = parseInt(parts[2], 10);
+                
+                const bulanIndo = [
+                    "Januari", "Februari", "Maret", "April", "Mei", "Juni",
+                    "Juli", "Agustus", "September", "Oktober", "November", "Desember"
+                ];
+                
+                return `${day} ${bulanIndo[monthIndex]} ${year}`;
+            }
+            
+            // Fallback jika format sudah dalam bentuk lokal DD/MM/YYYY dari server
+            return dateString;
+        }
+
+        // Fetch Data dari Database
+        function fetchData() {
+            if (WEB_APP_URL.includes("SAMPLE_ID")) {
+                // Simulasi Data Dummy jika URL belum di-setup oleh user
+                console.log("Menggunakan simulasi data dummy.");
+                allTransactions = [
+                    { Timestamp: "7/2/2026 3:11:06", ID: "1", Keterangan: "Jatah Bulanan", Jumlah: 5000000, Tipe: "income", Kategori: "Makanan", User: "Suami", Tanggal: "2026-07-01" },
+                    { Timestamp: "7/2/2026 3:12:43", ID: "2", Keterangan: "Pertamax", Jumlah: 300000, Tipe: "expense", Kategori: "Transportasi", User: "Suami", Tanggal: "2026-07-02" },
+                    { Timestamp: "7/2/2026 20:01:39", ID: "3", Keterangan: "Ngopi dibandara", Jumlah: 36400, Tipe: "expense", Kategori: "Makanan", User: "Suami", Tanggal: "2026-07-02" },
+                    { Timestamp: "7/6/2026 13:16:07", ID: "4", Keterangan: "CC BCA", Jumlah: 1346370, Tipe: "expense", Kategori: "Tagihan", User: "Istri", Tanggal: "2026-06-26" }
+                ];
+                updateUI(allTransactions);
                 return;
             }
 
-            filtered.forEach(t => {
-                const isIncome = t.type === 'income';
-                list.innerHTML += `
-                    <div class="p-3 bg-gray-50 dark:bg-gray-700/60 border-l-4 ${isIncome ? 'border-green-500' : 'border-red-500'} rounded-lg flex justify-between items-center transition-all">
-                        <div>
-                            <p class="font-semibold text-sm text-gray-800 dark:text-gray-100">${t.desc}</p>
-                            <p class="text-xs text-gray-400 dark:text-gray-400">${t.date} • ${t.user} ${t.category ? '• ' + t.category : ''}</p>
+            document.getElementById('loading-overlay').classList.remove('hidden');
+            fetch(`${WEB_APP_URL}?action=read`)
+                .then(res => res.json())
+                .then(data => {
+                    allTransactions = data;
+                    updateUI(allTransactions);
+                })
+                .catch(err => {
+                    console.error("Gagal memuat data:", err);
+                    // Gunakan data fallback / offline jika gagal koneksi
+                    allTransactions = [];
+                    document.getElementById('transaction-list').innerHTML = `
+                        <div class="text-center py-4">
+                            <p class="text-xs text-red-500 font-semibold mb-2">Gagal menyambung ke server.</p>
+                            <button onclick="fetchData()" class="px-3 py-1 text-xs bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300">Coba Lagi</button>
                         </div>
-                        <span class="font-bold text-sm ${isIncome ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'}">
-                            ${isIncome ? '+' : '-'} Rp ${t.amount.toLocaleString('id-ID')}
-                        </span>
+                    `;
+                })
+                .finally(() => {
+                    document.getElementById('loading-overlay').classList.add('hidden');
+                });
+        }
+
+        // Tampilkan data ke UI
+        function updateUI(data) {
+            renderTransactionsList(data);
+            renderChart(data);
+            calculateSummary(data);
+        }
+
+        // Render List Riwayat Transaksi (Perbaikan Utama di Sini)
+        function renderTransactionsList(data) {
+            const listContainer = document.getElementById('transaction-list');
+            listContainer.innerHTML = '';
+
+            if (data.length === 0) {
+                listContainer.innerHTML = `<p class="text-center text-sm text-gray-500 py-6">Tidak ada transaksi ditemukan.</p>`;
+                return;
+            }
+
+            // Urutkan transaksi berdasarkan ID atau tanggal input terbaru
+            const sortedData = [...data].sort((a, b) => {
+                const dateA = new Date(a.Tanggal || a.tanggal || 0);
+                const dateB = new Date(b.Tanggal || b.tanggal || 0);
+                return dateB - dateA; // Terkini di atas
+            });
+
+            sortedData.forEach(item => {
+                // --- SOLUSI BUG ---
+                // Kita gunakan properti "Tanggal" atau "tanggal" dari form user, bukan properti "Timestamp" otomatis
+                const rawDate = item.Tanggal || item.tanggal; 
+                const displayDate = formatTanggalLokal(rawDate); // Hanya tanggal tanpa timestamp jam
+
+                const isExpense = (item.Tipe || item.tipe || '').toLowerCase() === 'expense';
+                const amountText = (isExpense ? '-' : '+') + formatRupiah(item.Jumlah || item.jumlah || 0);
+                const colorClass = isExpense ? 'text-red-600 dark:text-red-400' : 'text-emerald-600 dark:text-emerald-400';
+                const bgIndicator = isExpense ? 'bg-red-500' : 'bg-emerald-500';
+
+                const card = document.createElement('div');
+                card.className = "flex items-center justify-between p-3.5 bg-gray-50 dark:bg-gray-900/50 rounded-xl border border-gray-100 dark:border-gray-800 transition-all hover:scale-[1.01]";
+                card.innerHTML = `
+                    <div class="flex items-center gap-3">
+                        <div class="w-2.5 h-10 rounded-full ${bgIndicator}"></div>
+                        <div>
+                            <p class="text-sm font-semibold text-gray-800 dark:text-gray-200">${item.Keterangan || item.keterangan || '-'}</p>
+                            <p class="text-[11px] text-gray-500 dark:text-gray-400 mt-0.5">
+                                <span class="bg-gray-200 dark:bg-gray-800 px-1.5 py-0.5 rounded font-medium">${item.User || item.user || 'Suami'}</span>
+                                <span class="mx-1">•</span> 
+                                <span>${displayDate}</span>
+                            </p>
+                        </div>
+                    </div>
+                    <div class="text-right">
+                        <p class="text-sm font-bold ${colorClass}">${amountText}</p>
+                        <p class="text-[10px] text-gray-400 dark:text-gray-500 mt-0.5 font-medium">${item.Kategori || item.kategori || '-'}</p>
                     </div>
                 `;
+                listContainer.appendChild(card);
             });
         }
 
-        // Render Grafik Visual
-        function updateCharts() {
+        // Filter data di UI
+        function applyFilters() {
+            const userFilter = document.getElementById('filter-user').value;
+            const typeFilter = document.getElementById('filter-type').value;
+
+            let filtered = allTransactions;
+
+            if (userFilter !== 'Semua') {
+                filtered = filtered.filter(t => (t.User || t.user) === userFilter);
+            }
+
+            if (typeFilter !== 'Semua') {
+                filtered = filtered.filter(t => (t.Tipe || t.tipe || '').toLowerCase() === typeFilter);
+            }
+
+            renderTransactionsList(filtered);
+        }
+
+        // Hitung Summary Box
+        function calculateSummary(data) {
+            let totalIncome = 0;
+            let totalExpense = 0;
+
+            data.forEach(item => {
+                const isExpense = (item.Tipe || item.tipe || '').toLowerCase() === 'expense';
+                const amount = parseFloat(item.Jumlah || item.jumlah || 0);
+                if (isExpense) {
+                    totalExpense += amount;
+                } else {
+                    totalIncome += amount;
+                }
+            });
+
+            document.getElementById('summary-income').innerText = formatRupiah(totalIncome);
+            document.getElementById('summary-expense').innerText = formatRupiah(totalExpense);
+        }
+
+        // Kirim Form Transaksi Baru
+        function handleFormSubmit(event) {
+            event.preventDefault();
+
+            const description = document.getElementById('description').value;
+            const amount = document.getElementById('amount').value;
+            const category = document.getElementById('category').value;
+            const user = document.getElementById('user').value;
+            const date = document.getElementById('date').value; // Tanggal pilihan manual user
+
+            if (!date) {
+                alert("Harap masukkan tanggal transaksi!");
+                return;
+            }
+
+            const payload = {
+                action: 'create',
+                Keterangan: description,
+                Jumlah: amount,
+                Tipe: currentTxType,
+                Kategori: currentTxType === 'income' ? 'Makanan' : category, // Default kategori untuk pemasukan
+                User: user,
+                Tanggal: date // Dikirim terpisah dari waktu submit (Timestamp)
+            };
+
+            if (WEB_APP_URL.includes("SAMPLE_ID")) {
+                // Mode Dummy offline jika URL belum diubah
+                const mockNewTx = {
+                    Timestamp: new Date().toLocaleString(),
+                    ID: Date.now().toString(),
+                    ...payload
+                };
+                allTransactions.unshift(mockNewTx);
+                updateUI(allTransactions);
+                document.getElementById('transaction-form').reset();
+                document.getElementById('date').valueAsDate = new Date();
+                switchTab('history-tab', document.querySelectorAll('.tab-btn')[1]);
+                return;
+            }
+
+            document.getElementById('loading-overlay').classList.remove('hidden');
+
+            fetch(WEB_APP_URL, {
+                method: 'POST',
+                mode: 'no-cors', // Menghindari CORS error pada Google Apps Script redirect
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload)
+            })
+            .then(() => {
+                // Karena 'no-cors' tidak mengembalikan respons yang valid di Fetch API,
+                // kita langsung panggil ulang data ter-update secara otomatis
+                setTimeout(() => {
+                    fetchData();
+                    document.getElementById('transaction-form').reset();
+                    document.getElementById('date').valueAsDate = new Date();
+                    switchTab('history-tab', document.querySelectorAll('.tab-btn')[1]);
+                }, 1000);
+            })
+            .catch(err => {
+                console.error("Gagal mengirim transaksi:", err);
+            })
+            .finally(() => {
+                document.getElementById('loading-overlay').classList.add('hidden');
+            });
+        }
+
+        // Render Grafik Bulanan
+        function renderChart(data) {
             const isDark = document.documentElement.classList.contains('dark');
             const textColor = isDark ? '#f3f4f6' : '#1f2937';
             const gridColor = isDark ? '#374151' : '#e5e7eb';
 
-            if (catChart) catChart.destroy();
-            if (monChart) monChart.destroy();
-
-            const dashboardMonth = document.getElementById('dashboard-filter-month').value;
-            
-            // 1. FILTER TRANSAKSI UNTUK KATEGORI
-            const filteredForCat = dashboardMonth === 'all' 
-                ? transactions.filter(t => t.type === 'expense')
-                : transactions.filter(t => t.type === 'expense' && t.date.startsWith(dashboardMonth));
-
-            const categories = ["Makanan", "Transportasi", "Pribadi", "Tagihan", "Lainnya"];
-            const suamiExpenses = categories.map(cat => {
-                return filteredForCat
-                    .filter(t => t.category === cat && t.user === 'Suami')
-                    .reduce((sum, t) => sum + t.amount, 0);
-            });
-            const istriExpenses = categories.map(cat => {
-                return filteredForCat
-                    .filter(t => t.category === cat && t.user === 'Istri')
-                    .reduce((sum, t) => sum + t.amount, 0);
-            });
-
-            // Grapic Kategori (Suami vs Istri)
-            const ctxCat = document.getElementById('chart-categories').getContext('2d');
-            catChart = new Chart(ctxCat, {
-                type: 'bar',
-                data: {
-                    labels: categories,
-                    datasets: [
-                        {
-                            label: 'Suami',
-                            data: suamiExpenses,
-                            backgroundColor: '#3b82f6', // Biru
-                            borderRadius: 4
-                        },
-                        {
-                            label: 'Istri',
-                            data: istriExpenses,
-                            backgroundColor: '#ec4899', // Merah Muda
-                            borderRadius: 4
-                        }
-                    ]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    plugins: {
-                        legend: { labels: { color: textColor } }
-                    },
-                    scales: {
-                        x: { ticks: { color: textColor }, grid: { color: gridColor } },
-                        y: { beginAtZero: true, ticks: { color: textColor }, grid: { color: gridColor } }
-                    }
-                }
-            });
-
-            // 2. PEMASUKAN VS PENGELUARAN BULANAN
+            // Agregasi bulanan sederhana
             const monthlyData = {};
-            transactions.forEach(t => {
-                const month = t.date.substring(0, 7);
-                if (!month) return;
+            data.forEach(item => {
+                const rawDate = item.Tanggal || item.tanggal || '';
+                if (!rawDate) return;
+                const month = rawDate.substring(0, 7); // Format: YYYY-MM
                 if (!monthlyData[month]) {
                     monthlyData[month] = { income: 0, expense: 0 };
                 }
-                if (t.type === 'income') {
-                    monthlyData[month].income += t.amount;
-                } else if (t.type === 'expense') {
-                    monthlyData[month].expense += t.amount;
+
+                const isExpense = (item.Tipe || item.tipe || '').toLowerCase() === 'expense';
+                const val = parseFloat(item.Jumlah || item.jumlah || 0);
+                if (isExpense) {
+                    monthlyData[month].expense += val;
+                } else {
+                    monthlyData[month].income += val;
                 }
             });
 
             const sortedMonths = Object.keys(monthlyData).sort();
-            const monthlyLabels = sortedMonths.map(m => formatYearMonth(m));
             const incomes = sortedMonths.map(m => monthlyData[m].income);
             const expenses = sortedMonths.map(m => monthlyData[m].expense);
+            const monthlyLabels = sortedMonths.map(m => {
+                const parts = m.split('-');
+                const monthNames = ["Jan", "Feb", "Mar", "Apr", "Mei", "Jun", "Jul", "Agt", "Sep", "Okt", "Nov", "Des"];
+                return `${monthNames[parseInt(parts[1], 10) - 1]} ${parts[0]}`;
+            });
+
+            if (monChart) {
+                monChart.destroy();
+            }
 
             const ctxMon = document.getElementById('chart-monthly').getContext('2d');
             monChart = new Chart(ctxMon, {
