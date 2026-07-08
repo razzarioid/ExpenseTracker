@@ -125,7 +125,7 @@
 
     <script>
         // Masukkan URL Google Apps Script Web App Anda di bawah ini
-        const WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbyP5AI06D3pv2ozhg9ZqUJ93jzMhtlKBn4sTB-3wWCHAr1sl6hde3bCR-y5vdkhkI7bqQ/exec'; 
+        const WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbwQeY_l7vWDp_iaPOPleCvkS-3Vcxv9j-uZ4_HfcqftOhrvNDz1JQApaK7nV87sL5pS/exec'; 
         let transactions = [];
         let catChart, monChart;
 
@@ -169,6 +169,16 @@
             return (mIndex >= 0 && mIndex < 12) ? `${monthsIndo[mIndex]} ${year}` : yearMonthStr;
         }
 
+        // Fungsi pembantu untuk membersihkan string tanggal ISO 8601 agar hanya berupa YYYY-MM-DD
+        function cleanDateString(dateStr) {
+            if (!dateStr) return '';
+            // Jika data tanggal masih dikirim dalam format ISO "2026-06-29T17:00:00.000Z", ambil bagian tanggalnya saja
+            if (dateStr.includes('T')) {
+                return dateStr.split('T')[0];
+            }
+            return dateStr;
+        }
+
         // Ambil data transaksi dari Google Sheets
         async function fetchData() {
             showLoading(true);
@@ -177,15 +187,20 @@
                 const rawData = await res.json();
                 
                 // Normalisasi Key data (Bahasa Indonesia & Inggris)
-                transactions = rawData.map(t => ({
-                    id: t.id || t.ID || Date.now(),
-                    desc: t.desc || t.Keterangan || t.keterangan || '',
-                    amount: parseFloat(t.amount || t.Jumlah || t.jumlah || 0),
-                    type: (t.type || t.Tipe || t.tipe || '').toLowerCase(),
-                    category: t.category || t.Kategori || t.kategori || 'Lainnya',
-                    user: t.user || t.User || 'Suami',
-                    date: t.date || t.Tanggal || t.tanggal || ''
-                })).filter(t => t.date && !isNaN(t.amount));
+                transactions = rawData.map(t => {
+                    let rawDate = t.date || t.Tanggal || t.tanggal || '';
+                    let cleanDate = cleanDateString(rawDate);
+                    
+                    return {
+                        id: t.id || t.ID || Date.now(),
+                        desc: t.desc || t.Keterangan || t.keterangan || '',
+                        amount: parseFloat(t.amount || t.Jumlah || t.jumlah || 0),
+                        type: (t.type || t.Tipe || t.tipe || '').toLowerCase(),
+                        category: t.category || t.Kategori || t.kategori || 'Lainnya',
+                        user: t.user || t.User || 'Suami',
+                        date: cleanDate
+                    };
+                }).filter(t => t.date && !isNaN(t.amount));
 
                 updateFilters();
                 updateUI();
@@ -260,7 +275,7 @@
                 type: typeValue,
                 category: typeValue === 'expense' ? document.getElementById('category').value : '',
                 user: document.getElementById('user').value,
-                date: document.getElementById('date').value
+                date: document.getElementById('date').value // Format dikirim: "YYYY-MM-DD"
             };
 
             try {
@@ -283,7 +298,7 @@
             const list = document.getElementById('history-list');
             const selectedMonth = document.getElementById('filter-month').value;
             
-            // Hitung total saldo
+            // Hitung total saldo global
             let totalIncome = 0;
             let totalExpense = 0;
 
@@ -299,7 +314,7 @@
             const balanceEl = document.getElementById('total-balance');
             balanceEl.innerText = `Rp ${balance.toLocaleString('id-ID')}`;
 
-            // Saring list transaksi berdasarkan filter
+            // Saring list transaksi berdasarkan filter bulan terpilih
             const filtered = selectedMonth === 'all' 
                 ? transactions 
                 : transactions.filter(t => t.date.startsWith(selectedMonth));
